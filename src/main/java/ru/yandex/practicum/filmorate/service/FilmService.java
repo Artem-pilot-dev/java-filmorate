@@ -3,7 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FilmRequestDto;
+import ru.yandex.practicum.filmorate.dto.FilmResponseDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -24,26 +27,37 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
-    public Film addFilm(Film film) {
+    public FilmResponseDto addFilm(FilmRequestDto dto) {
+        Film film = FilmMapper.toFilm(dto);
         validateFilm(film);
-        return filmStorage.addFilm(film);
+        Film savedFilm = filmStorage.addFilm(film);
+        return FilmMapper.toFilmResponseDto(savedFilm);
     }
 
-    public Film updateFilm(Film film) {
+    public FilmResponseDto updateFilm(FilmRequestDto dto) {
+        Film film = FilmMapper.toFilm(dto);
         validateFilm(film);
-        return filmStorage.updateFilm(film);
+        Film updatedFilm = filmStorage.updateFilm(film);
+        return FilmMapper.toFilmResponseDto(updatedFilm);
     }
 
-    public Film getFilmById(Long filmId) {
+    private Film getStorageFilmById(Long filmId) {
         return filmStorage.getFilmById(filmId);
     }
 
-    public List<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+    public FilmResponseDto getFilmById(Long filmId) {
+        Film film = getStorageFilmById(filmId);
+        return FilmMapper.toFilmResponseDto(film);
     }
 
-    public Film addLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+    public List<FilmResponseDto> getAllFilms() {
+        return filmStorage.getAllFilms().stream()
+                .map(film -> FilmMapper.toFilmResponseDto(film))
+                .toList();
+    }
+
+    public FilmResponseDto addLike(Long filmId, Long userId) {
+        Film film = getStorageFilmById(filmId);
         userStorage.getUserById(userId);
         boolean added = film.getLikes().add(userId);
         if (added) {
@@ -51,11 +65,11 @@ public class FilmService {
         } else {
             log.debug("Лайк от пользователя {} уже существует к фильму {}", userId, film.getName());
         }
-        return film;
+        return FilmMapper.toFilmResponseDto(film);
     }
 
-    public Film removeLike(Long filmId, Long userId) {
-        Film film = getFilmById(filmId);
+    public FilmResponseDto removeLike(Long filmId, Long userId) {
+        Film film = getStorageFilmById(filmId);
         userStorage.getUserById(userId);
         boolean removed = film.getLikes().remove(userId);
         if (removed) {
@@ -63,16 +77,17 @@ public class FilmService {
         } else {
             log.debug("Такого лайка от пользователя с id = {} к фильму {} не было", userId, film.getName());
         }
-        return film;
+        return FilmMapper.toFilmResponseDto(film);
     }
 
-    public List<Film> getPopularFilms(int count) {
+    public List<FilmResponseDto> getPopularFilms(int count) {
         if (count <= 0) {
             throw new ValidationException("count должен быть больше 0");
         }
         Comparator<Film> byLikes = Comparator.comparingInt(film -> film.getLikes().size());
         return filmStorage.getAllFilms().stream()
-                .sorted(byLikes.reversed()).limit(count).toList();
+                .sorted(byLikes.reversed()).map(film -> FilmMapper.toFilmResponseDto(film)).limit(count).toList();
+
     }
 
     private void validateFilm(Film film) {

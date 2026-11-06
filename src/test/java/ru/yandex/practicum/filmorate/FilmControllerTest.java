@@ -6,8 +6,8 @@ import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.dto.FilmRequestDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
@@ -20,92 +20,92 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmControllerTest {
 
     private FilmController controller;
-    private Film film;
     private Validator validator;
+    private FilmRequestDto dto;
 
     @BeforeEach
     public void createControllerAndFilm() {
         controller = new FilmController(new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage()));
         validator = Validation.buildDefaultValidatorFactory().getValidator();
-        film = new Film();
-        film.setName("Tiger");
-        film.setDescription("Like tiger lived in garden");
-        film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        film.setDuration(90);
+        dto = new FilmRequestDto();
+        dto.setName("Tiger");
+        dto.setDescription("Like tiger lived in garden");
+        dto.setReleaseDate(LocalDate.of(1895, 12, 28));
+        dto.setDuration(90);
     }
 
     @Test
     public void shouldRejectFilmWithReleaseDateBeforeMinimum() {
-        film.setReleaseDate(LocalDate.of(1895, 12, 27));
-        assertThrows(ValidationException.class, () -> controller.addFilm(film));
+        dto.setReleaseDate(LocalDate.of(1895, 12, 27));
+        assertThrows(ValidationException.class, () -> controller.addFilm(dto));
     }
 
     @Test
     public void shouldAcceptFilmWithReleaseDateAtMinimum() {
-        film.setReleaseDate(LocalDate.of(1895, 12, 28));
-        assertDoesNotThrow(() -> controller.addFilm(film));
+        dto.setReleaseDate(LocalDate.of(1895, 12, 28));
+        assertDoesNotThrow(() -> controller.addFilm(dto));
     }
 
     @Test
     public void shouldRejectFilmWithLengthOfDescriptionOver200Symbols() {
-        film.setDescription("a".repeat(201));
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDescription("a".repeat(201));
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldAcceptFilmWithDescriptionLength200() {
-        film.setDescription("L".repeat(200));
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDescription("L".repeat(200));
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithDurationZero() {
-        film.setDuration(0);
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDuration(0);
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldAcceptFilmWithDurationOne() {
-        film.setDuration(1);
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDuration(1);
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithDurationNull() {
-        film.setDuration(null);
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDuration(null);
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithDurationMinusOne() {
-        film.setDuration(-1);
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setDuration(-1);
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithNameNull() {
-        film.setName(null);
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setName(null);
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithEmptyName() {
-        film.setName("");
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setName("");
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 
     @Test
     public void shouldRejectFilmWithBlankName() {
-        film.setName(" ");
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
+        dto.setName(" ");
+        Set<ConstraintViolation<FilmRequestDto>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
     }
 

@@ -3,7 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.UserRequestDto;
+import ru.yandex.practicum.filmorate.dto.UserResponseDto;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -19,52 +22,62 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public User createUser(User user) {
+    public UserResponseDto createUser(UserRequestDto dto) {
+        User user = UserMapper.toUser(dto);
         validateUser(user);
-        return userStorage.createUser(user);
+        User savedUser = userStorage.createUser(user);
+        return UserMapper.toResponseDto(savedUser);
     }
 
-    public User updateUser(User user) {
+    public UserResponseDto updateUser(UserRequestDto dto) {
+        User user = UserMapper.toUser(dto);
         validateUser(user);
-        return userStorage.updateUser(user);
+        User updatedUser = userStorage.updateUser(user);
+        return UserMapper.toResponseDto(updatedUser);
     }
 
-    public User getUserById(Long userId) {
+    private User getStoredUserById(Long userId) {
         return userStorage.getUserById(userId);
     }
 
-    public List<User> getAllUsers() {
-        return userStorage.getAllUsers();
+    public UserResponseDto getUserById(Long userId) {
+        User user = userStorage.getUserById(userId);
+        return UserMapper.toResponseDto(user);
     }
 
-    public User addFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+    public List<UserResponseDto> getAllUsers() {
+        List<User> listOfUsers = userStorage.getAllUsers();
+        return listOfUsers.stream().map(user -> UserMapper.toResponseDto(user)).toList();
+    }
+
+    public UserResponseDto addFriend(Long userId, Long friendId) {
+        User user = getStoredUserById(userId);
+        User friend = getStoredUserById(friendId);
         user.getFriends().add(friend.getId());
         friend.getFriends().add(user.getId());
-        return user;
+        return UserMapper.toResponseDto(user);
     }
 
-    public User removeFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
+    public UserResponseDto removeFriend(Long userId, Long friendId) {
+        User user = getStoredUserById(userId);
+        User friend = getStoredUserById(friendId);
         user.getFriends().remove(friend.getId());
         friend.getFriends().remove(user.getId());
-        return user;
+        return UserMapper.toResponseDto(user);
     }
 
-    public List<User> getFriends(Long userId) {
-        return getUserById(userId).getFriends().stream()
-                .map(id -> getUserById(id))
+    public List<UserResponseDto> getFriends(Long userId) {
+        return getStoredUserById(userId).getFriends().stream()
+                .map(id -> UserMapper.toResponseDto(getStoredUserById(id)))
                 .toList();
     }
 
-    public List<User> getCommonFriends(Long userId, Long otherId) {
-        User user = getUserById(userId);
-        User otherUser = getUserById(otherId);
+    public List<UserResponseDto> getCommonFriends(Long userId, Long otherId) {
+        User user = getStoredUserById(userId);
+        User otherUser = getStoredUserById(otherId);
         return user.getFriends().stream()
                 .filter(id -> otherUser.getFriends().contains(id))
-                .map(id -> getUserById(id))
+                .map(id -> UserMapper.toResponseDto(getStoredUserById(id)))
                 .toList();
     }
 

@@ -4,8 +4,10 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dto.UserRequestDto;
+import ru.yandex.practicum.filmorate.dto.UserResponseDto;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -23,47 +25,47 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) {
-        User createdUser = userService.createUser(user);
+    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto dto) {
+        UserResponseDto createdUser = userService.createUser(dto);
         log.info("Создан пользователь с id {}", createdUser.getId());
-        return createdUser;
+        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserResponseDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @PutMapping
-    public User updateUser(@Valid @RequestBody User user) {
-        User updatedUser = userService.updateUser(user);
+    public ResponseEntity<UserResponseDto> updateUser(@Valid @RequestBody UserRequestDto dto) {
+        UserResponseDto updatedUser = userService.updateUser(dto);
         log.info("Данные пользователя с id {} обновлены", updatedUser.getId());
-        return updatedUser;
+        return ResponseEntity.ok(updatedUser);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        return userService.addFriend(id, friendId);
+    public ResponseEntity<UserResponseDto> addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return ResponseEntity.ok(userService.addFriend(id, friendId));
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public User removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        return userService.removeFriend(id, friendId);
+    public ResponseEntity<UserResponseDto> removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        return ResponseEntity.ok(userService.removeFriend(id, friendId));
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable Long id) {
-        return userService.getFriends(id);
+    public ResponseEntity<List<UserResponseDto>> getFriends(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getFriends(id));
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        return userService.getCommonFriends(id, otherId);
+    public ResponseEntity<List<UserResponseDto>> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        return ResponseEntity.ok(userService.getCommonFriends(id, otherId));
     }
 
 }
